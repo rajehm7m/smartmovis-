@@ -716,3 +716,265 @@
     </script>
 </body>
 </html>
+<script>
+        const SECRET_CODE = "RajehTob";
+        
+        // استرجاع البيانات المحفوظة أو استخدام البيانات الافتراضية
+        let categories = JSON.parse(localStorage.getItem('sm_categories')) || [
+            { name: "أفلام أكشن", coverUrl: "https://via.placeholder.com/300x400/1e293b/ffffff?text=أفلام+أكشن" },
+            { name: "أفلام كوميدية", coverUrl: "https://via.placeholder.com/300x400/1e293b/ffffff?text=أفلام+كوميدية" }
+        ];
+
+        let movies = JSON.parse(localStorage.getItem('sm_movies')) || [];
+        let reports = JSON.parse(localStorage.getItem('sm_reports')) || [];
+
+        // دالة حفظ البيانات دائماً في الذاكرة المحلية
+        function saveData() {
+            localStorage.setItem('sm_categories', JSON.stringify(categories));
+            localStorage.setItem('sm_movies', JSON.stringify(movies));
+            localStorage.setItem('sm_reports', JSON.stringify(reports));
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function showCategoriesView() {
+            document.getElementById('view-categories').style.display = 'grid';
+            document.getElementById('view-movies').style.display = 'none';
+            document.getElementById('view-player').style.display = 'none';
+            document.getElementById('videoContainer').innerHTML = '';
+
+            document.getElementById('breadcrumb').innerHTML = `<span onclick="showCategoriesView()">الرئيسية (القوائم)</span>`;
+
+            const container = document.getElementById('view-categories');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                container.innerHTML += `
+                    <div class="category-card" onclick="openCategoryMovies('${cat.name}')">
+                        <img src="${cat.coverUrl}" alt="${cat.name}">
+                        <div class="card-title">${cat.name}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function openCategoryMovies(catName) {
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-movies').style.display = 'grid';
+            document.getElementById('view-player').style.display = 'none';
+
+            document.getElementById('breadcrumb').innerHTML = `
+                <span onclick="showCategoriesView()">الرئيسية</span> / <span>${catName}</span>
+            `;
+
+            const container = document.getElementById('view-movies');
+            container.innerHTML = '';
+
+            const filteredMovies = movies.filter(m => m.category === catName);
+
+            if(filteredMovies.length === 0) {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#94a3b8; padding:30px;">لا توجد أفلام في هذه القائمة بعد</p>`;
+                return;
+            }
+
+            filteredMovies.forEach(m => {
+                container.innerHTML += `
+                    <div class="movie-card" onclick="playMovie('${m.title}', '${m.videoUrl}', '${m.category}')">
+                        <img src="${m.coverUrl}" alt="${m.title}">
+                        <div class="card-title">${m.title}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function playMovie(title, videoUrl, catName) {
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-movies').style.display = 'none';
+            document.getElementById('view-player').style.display = 'block';
+
+            document.getElementById('breadcrumb').innerHTML = `
+                <span onclick="showCategoriesView()">الرئيسية</span> / 
+                <span onclick="openCategoryMovies('${catName}')">${catName}</span> / 
+                <span>${title}</span>
+            `;
+
+            document.getElementById('videoContainer').innerHTML = `
+                <video controls autoplay style="width:100%; height:100%;">
+                    <source src="${videoUrl}">
+                </video>
+            `;
+            document.getElementById('playingTitle').innerText = title;
+            document.getElementById('downloadLink').href = videoUrl;
+        }
+
+        function openAdminModal() {
+            openModal('adminModal');
+            showStep('admin-step-auth');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function showStep(stepId) {
+            const steps = ['admin-step-auth', 'admin-step-menu', 'admin-add-cat', 'admin-manage-cat', 'admin-add-movie', 'admin-manage-movies', 'admin-reports'];
+            steps.forEach(s => document.getElementById(s).style.display = 'none');
+            document.getElementById(stepId).style.display = 'block';
+        }
+
+        function verifyPassword() {
+            const pwd = document.getElementById('adminPassword').value.trim();
+            if(pwd.toLowerCase() === SECRET_CODE.toLowerCase()) {
+                showStep('admin-step-menu');
+            } else {
+                alert("رمز المرور غير صحيح!");
+            }
+        }
+
+        function addCategory() {
+            const name = document.getElementById('catInput').value.trim();
+            const imgFile = document.getElementById('catImgInput').files[0];
+
+            if(!name) {
+                alert("يرجى أدخال اسم القائمة!");
+                return;
+            }
+
+            const coverUrl = imgFile ? URL.createObjectURL(imgFile) : 'https://via.placeholder.com/300x400/151c28/ffffff?text=' + encodeURIComponent(name);
+
+            categories.push({ name: name, coverUrl: coverUrl });
+            saveData(); // حفظ البيانات
+
+            document.getElementById('catInput').value = '';
+            document.getElementById('catImgInput').value = '';
+            
+            showCategoriesView();
+            showStep('admin-step-menu');
+        }
+
+        function showManageCategories() {
+            showStep('admin-manage-cat');
+            const box = document.getElementById('catListContainer');
+            box.innerHTML = '';
+            categories.forEach((cat, idx) => {
+                box.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
+                        <span>${cat.name}</span>
+                        <button onclick="deleteCategory(${idx})" style="color:red; cursor:pointer;">حذف القائمة</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteCategory(index) {
+            categories.splice(index, 1);
+            saveData(); // حفظ البيانات
+            showCategoriesView();
+            showManageCategories();
+        }
+
+        function showAddMovieForm() {
+            showStep('admin-add-movie');
+            const select = document.getElementById('movieCatSelect');
+            select.innerHTML = '';
+            categories.forEach(c => select.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+        }
+
+        function saveMovie() {
+            const cat = document.getElementById('movieCatSelect').value;
+            const title = document.getElementById('movieTitle').value.trim();
+            const vFile = document.getElementById('videoFile').files[0];
+            const iFile = document.getElementById('imageFile').files[0];
+
+            if(!title || !vFile) {
+                alert("يرجى كتابة اسم الفيلم واختيار ملف الفيديو!");
+                return;
+            }
+
+            movies.push({
+                id: Date.now(),
+                title: title,
+                category: cat,
+                videoUrl: URL.createObjectURL(vFile),
+                coverUrl: iFile ? URL.createObjectURL(iFile) : 'https://via.placeholder.com/300x400/151c28/ffffff?text=بدون+غلاف'
+            });
+
+            saveData(); // حفظ البيانات
+            closeModal('adminModal');
+            alert("تم إدراج الفيلم بنجاح!");
+        }
+
+        function showManageMovies() {
+            showStep('admin-manage-movies');
+            const box = document.getElementById('movieListContainer');
+            box.innerHTML = '';
+            movies.forEach(m => {
+                box.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
+                        <span>${m.title} (${m.category})</span>
+                        <button onclick="deleteMovie(${m.id})" style="color:red; cursor:pointer;">حذف الفيلم</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteMovie(id) {
+            movies = movies.filter(m => m.id !== id);
+            saveData(); // حفظ البيانات
+            showManageMovies();
+        }
+
+        function sendReport() {
+            const txt = document.getElementById('reportText').value.trim();
+            if(!txt) return;
+            reports.push(txt);
+            saveData(); // حفظ البيانات
+            document.getElementById('reportText').value = '';
+            closeModal('helpModal');
+            updateBadges();
+            alert("تم الإرسال للإدارة بنجاح.");
+        }
+
+        function updateBadges() {
+            document.getElementById('reportBadge').innerText = reports.length;
+            document.getElementById('reportsBadgeInBox').innerText = reports.length;
+        }
+
+        function showReportsList() {
+            showStep('admin-reports');
+            const box = document.getElementById('reportsContainer');
+            box.innerHTML = '';
+            reports.forEach((r, idx) => {
+                box.innerHTML += `
+                    <div style="background:#f1f5f9; padding:8px; margin-bottom:5px; border-radius:4px;">
+                        <p style="font-size:12px; color:#000;">${r}</p>
+                        <button onclick="deleteReport(${idx})" style="color:red; font-size:11px; margin-top:4px; cursor:pointer;">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteReport(idx) {
+            reports.splice(idx, 1);
+            saveData(); // حفظ البيانات
+            updateBadges();
+            showReportsList();
+        }
+
+        function doSearch() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const box = document.getElementById('searchResults');
+            box.innerHTML = '';
+            if(!q) return;
+
+            movies.filter(m => m.title.toLowerCase().includes(q)).forEach(m => {
+                box.innerHTML += `
+                    <div style="padding:8px; cursor:pointer; background:#1e293b; margin-bottom:4px; border-radius:4px;" onclick="playMovie('${m.title}', '${m.videoUrl}', '${m.category}'); closeModal('searchModal');">
+                        🎬 ${m.title}
+                    </div>
+                `;
+            });
+        }
+
+        // تشغيل البداية وتحديث الشارات
+        updateBadges();
+        showCategoriesView();
+    </script>
