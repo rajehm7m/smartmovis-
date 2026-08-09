@@ -1,0 +1,718 @@
+<title>SmartMovies | سمارت موفيز</title>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMovies | سمارت موفيز</title>
+    <style>
+        :root {
+            --bg-main: #0b0e14;
+            --bg-card: #151c28;
+            --accent-red: #800000;
+            --bright-red: #e50914;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding-bottom: 40px;
+        }
+
+        header {
+            background-color: #000000;
+            padding: 12px 3%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: #ff0015;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .logo-text span { color: #fff; }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .icon-btn:hover { background: var(--bright-red); }
+
+        .secret-btn-wrapper { position: relative; }
+
+        .secret-btn {
+            width: 35px;
+            height: 35px;
+            background-color: #1f2937;
+            border: 2px solid var(--bright-red);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .secret-btn:hover { transform: scale(1.1); }
+
+        .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--bright-red);
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb span {
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .breadcrumb span:hover { text-decoration: underline; }
+
+        /* شبكة عرض القوائم */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .folder-card {
+            background: var(--bg-card);
+            border: 2px solid #1e293b;
+            border-radius: 10px;
+            padding: 30px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .folder-card:hover {
+            border-color: var(--bright-red);
+            transform: translateY(-5px);
+        }
+
+        .folder-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* شبكة الأفلام (الأغلفة فقط) */
+        .movie-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid #1e293b;
+        }
+
+        .movie-card:hover { transform: scale(1.04); }
+
+        .movie-card img {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .movie-card-title {
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* مشغل الفيديو عند فتح غلاف الفيلم */
+        .player-view {
+            display: none;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .video-box {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .video-box video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .player-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .download-btn {
+            background: #16a34a;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* نافذة الإدارة المصممة بناءً على الصورة المرفقة */
+        .admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .admin-frame {
+            background-color: #660000;
+            width: 90%;
+            max-width: 550px;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+        }
+
+        .admin-header-image {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .admin-header-title {
+            color: #ff0015;
+            font-size: 20px;
+            font-weight: 900;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .admin-white-box {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 25px 20px;
+            color: #000;
+            min-height: 380px;
+        }
+
+        .admin-box-title {
+            font-size: 26px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .close-admin {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        input[type="password"], input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: #000;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #660000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .btn-gray { background: #475569; }
+
+        .admin-item-btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #000;
+        }
+
+        .admin-item-btn:hover { background: #e2e8f0; }
+
+        .modal-simple {
+            display: none;
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-simple-content {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-right">
+            <div class="logo-text" onclick="showCategoryList()">SMART<span>MOVIES</span></div>
+        </div>
+
+        <div class="header-left">
+            <button class="icon-btn" onclick="openModal('searchModal')">🔍 بحث</button>
+            <button class="icon-btn" onclick="openModal('helpModal')">💬 شكوى/مساعدة</button>
+            <div class="secret-btn-wrapper">
+                <button class="secret-btn" onclick="openAdminModal()" title="لوحة الإدارة"></button>
+                <div class="badge" id="reportBadge">0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- شريط المسار التنقلي -->
+        <div class="breadcrumb" id="breadcrumb">
+            <span onclick="showCategoryList()">الرئيسية (قوائم الأفلام)</span>
+        </div>
+
+        <!-- 1. عرض القوائم فقط -->
+        <div id="view-categories" class="grid-layout"></div>
+
+        <!-- 2. عرض أغلفة أفلام القائمة المختارة -->
+        <div id="view-movies" class="grid-layout" style="display:none;"></div>
+
+        <!-- 3. عرض مشغل الفيلم عند الضغط على الغلاف -->
+        <div id="view-player" class="player-view">
+            <div class="video-box" id="videoContainer"></div>
+            <div class="player-actions">
+                <h3 id="playingTitle"></h3>
+                <a id="downloadLink" class="download-btn" download>تحميل الفيلم 📥</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الإدارة بالتصميم المرفق -->
+    <div class="admin-overlay" id="adminModal">
+        <div class="admin-frame">
+            <span class="close-admin" onclick="closeModal('adminModal')">&times;</span>
+            
+            <div class="admin-header-image">
+                <div class="admin-header-title">SMART<br>MOVIES</div>
+            </div>
+
+            <div class="admin-white-box">
+                <div class="admin-box-title">هنا قوائم الاداره</div>
+
+                <!-- الدخول -->
+                <div id="admin-step-auth">
+                    <input type="password" id="adminPassword" placeholder="أدخل رمز المرور">
+                    <button class="btn" onclick="verifyPassword()">دخول</button>
+                </div>
+
+                <!-- الخيارات -->
+                <div id="admin-step-menu" style="display:none;">
+                    <div class="admin-item-btn" onclick="showStep('admin-add-cat')">+ إضافة قائمة جديدة</div>
+                    <div class="admin-item-btn" onclick="showManageCategories()">📂 حذف قائمة</div>
+                    <div class="admin-item-btn" onclick="showAddMovieForm()">+ إضافة فيلم جديد</div>
+                    <div class="admin-item-btn" onclick="showManageMovies()">✏️ حذف فيلم</div>
+                    <div class="admin-item-btn" onclick="showReportsList()">
+                        <span>⚠️ المشاكل والشكاوى</span>
+                        <span style="background:#660000; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;" id="reportsBadgeInBox">0</span>
+                    </div>
+                </div>
+
+                <!-- إضافة قائمة -->
+                <div id="admin-add-cat" style="display:none;">
+                    <input type="text" id="catInput" placeholder="اسم القائمة">
+                    <button class="btn" onclick="addCategory()">حفظ القائمة</button>
+                    <button class="btn btn-gray" onclick="showStep('admin-step-menu')">رجوع</button>
+                </div>
+
+                <!-- حذف القوائم -->
+                <div id="admin-manage-cat" style="display:none;">
+                    <div id="catListContainer"></div>
+                    <button class="btn btn-gray" onclick="showStep('admin-step-menu')">رجوع</button>
+                </div>
+
+                <!-- إضافة فيلم -->
+                <div id="admin-add-movie" style="display:none;">
+                    <select id="movieCatSelect"></select>
+                    <input type="text" id="movieTitle" placeholder="اسم الفيلم">
+                    <p style="font-size:12px; margin-top:5px;">اختر الفيديو:</p>
+                    <input type="file" id="videoFile" accept="video/*">
+                    <p style="font-size:12px; margin-top:5px;">اختر صورة الغلاف:</p>
+                    <input type="file" id="imageFile" accept="image/*">
+                    <button class="btn" onclick="saveMovie()">إضافة الفيلم</button>
+                    <button class="btn btn-gray" onclick="showStep('admin-step-menu')">رجوع</button>
+                </div>
+
+                <!-- حذف أفلام -->
+                <div id="admin-manage-movies" style="display:none;">
+                    <div id="movieListContainer"></div>
+                    <button class="btn btn-gray" onclick="showStep('admin-step-menu')">رجوع</button>
+                </div>
+
+                <!-- عرض الشكاوى -->
+                <div id="admin-reports" style="display:none;">
+                    <div id="reportsContainer"></div>
+                    <button class="btn btn-gray" onclick="showStep('admin-step-menu')">رجوع</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة البحث -->
+    <div class="modal-simple" id="searchModal">
+        <div class="modal-simple-content">
+            <h3>البحث عن فيلم</h3>
+            <input type="text" id="searchInput" placeholder="اكتب اسم الفيلم..." onkeyup="doSearch()">
+            <div id="searchResults" style="margin-top:10px;"></div>
+            <button class="btn btn-gray" onclick="closeModal('searchModal')">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة الشكاوى -->
+    <div class="modal-simple" id="helpModal">
+        <div class="modal-simple-content">
+            <h3>إرسال شكوى/مساعدة</h3>
+            <textarea id="reportText" placeholder="اكتب المشكلة هنا..."></textarea>
+            <button class="btn" onclick="sendReport()">إرسال</button>
+            <button class="btn btn-gray" onclick="closeModal('helpModal')" style="margin-top:5px;">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        const SECRET_CODE = "RajehTob";
+        let categories = ["أفلام أكشن", "أفلام كوميدية"];
+        let movies = [];
+        let reports = [];
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- التصفح العرضي (قوائم -> أغلفة -> مشغل) ---
+        function showCategoryList() {
+            document.getElementById('view-categories').style.display = 'grid';
+            document.getElementById('view-movies').style.display = 'none';
+            document.getElementById('view-player').style.display = 'none';
+            document.getElementById('videoContainer').innerHTML = ''; // إيقاف أي فيديو
+            
+            document.getElementById('breadcrumb').innerHTML = `<span onclick="showCategoryList()">الرئيسية (قوائم الأفلام)</span>`;
+
+            const container = document.getElementById('view-categories');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                container.innerHTML += `
+                    <div class="folder-card" onclick="openCategory('${cat}')">
+                        <div class="folder-icon">📁</div>
+                        <h3>${cat}</h3>
+                    </div>
+                `;
+            });
+        }
+
+        function openCategory(catName) {
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-movies').style.display = 'grid';
+            document.getElementById('view-player').style.display = 'none';
+
+            document.getElementById('breadcrumb').innerHTML = `
+                <span onclick="showCategoryList()">الرئيسية</span> / <span>${catName}</span>
+            `;
+
+            const container = document.getElementById('view-movies');
+            container.innerHTML = '';
+
+            const filteredMovies = movies.filter(m => m.category === catName);
+
+            if(filteredMovies.length === 0) {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#94a3b8;">لا توجد أفلام في هذه القائمة حالياً</p>`;
+                return;
+            }
+
+            filteredMovies.forEach(m => {
+                container.innerHTML += `
+                    <div class="movie-card" onclick="playMovie('${m.title}', '${m.videoUrl}', '${m.category}')">
+                        <img src="${m.coverUrl}" alt="غلاف الفيلم">
+                        <div class="movie-card-title">${m.title}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function playMovie(title, videoUrl, catName) {
+            document.getElementById('view-categories').style.display = 'none';
+            document.getElementById('view-movies').style.display = 'none';
+            document.getElementById('view-player').style.display = 'block';
+
+            document.getElementById('breadcrumb').innerHTML = `
+                <span onclick="showCategoryList()">الرئيسية</span> / 
+                <span onclick="openCategory('${catName}')">${catName}</span> / 
+                <span>${title}</span>
+            `;
+
+            document.getElementById('videoContainer').innerHTML = `
+                <video controls autoplay style="width:100%; height:100%;">
+                    <source src="${videoUrl}">
+                </video>
+            `;
+            document.getElementById('playingTitle').innerText = title;
+            document.getElementById('downloadLink').href = videoUrl;
+        }
+
+        // --- الإدارة والتصميم المخصص ---
+        function openAdminModal() {
+            openModal('adminModal');
+            showStep('admin-step-auth');
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function showStep(stepId) {
+            const steps = ['admin-step-auth', 'admin-step-menu', 'admin-add-cat', 'admin-manage-cat', 'admin-add-movie', 'admin-manage-movies', 'admin-reports'];
+            steps.forEach(s => document.getElementById(s).style.display = 'none');
+            document.getElementById(stepId).style.display = 'block';
+        }
+
+        function verifyPassword() {
+            const pwd = document.getElementById('adminPassword').value.trim();
+            if(pwd.toLowerCase() === SECRET_CODE.toLowerCase()) {
+                showStep('admin-step-menu');
+            } else {
+                alert("رمز المرور غير صحيح!");
+            }
+        }
+
+        function addCategory() {
+            const val = document.getElementById('catInput').value.trim();
+            if(val && !categories.includes(val)) {
+                categories.push(val);
+                document.getElementById('catInput').value = '';
+                showCategoryList();
+                showStep('admin-step-menu');
+            }
+        }
+
+        function showManageCategories() {
+            showStep('admin-manage-cat');
+            const box = document.getElementById('catListContainer');
+            box.innerHTML = '';
+            categories.forEach((cat, idx) => {
+                box.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>${cat}</span>
+                        <button onclick="deleteCat(${idx})" style="color:red;">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteCat(index) {
+            categories.splice(index, 1);
+            showCategoryList();
+            showManageCategories();
+        }
+
+        function showAddMovieForm() {
+            showStep('admin-add-movie');
+            const select = document.getElementById('movieCatSelect');
+            select.innerHTML = '';
+            categories.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+
+        function saveMovie() {
+            const cat = document.getElementById('movieCatSelect').value;
+            const title = document.getElementById('movieTitle').value.trim();
+            const vFile = document.getElementById('videoFile').files[0];
+            const iFile = document.getElementById('imageFile').files[0];
+
+            if(!title || !vFile) {
+                alert("يرجى كتابة الاسم واختيار فيديو!");
+                return;
+            }
+
+            const newMovie = {
+                id: Date.now(),
+                title: title,
+                category: cat,
+                videoUrl: URL.createObjectURL(vFile),
+                coverUrl: iFile ? URL.createObjectURL(iFile) : 'https://via.placeholder.com/300x400/151c28/ffffff?text=غلاف+الفيلم'
+            };
+
+            movies.push(newMovie);
+            closeModal('adminModal');
+            alert("تم إضافة الفيلم بنجاح!");
+        }
+
+        function showManageMovies() {
+            showStep('admin-manage-movies');
+            const box = document.getElementById('movieListContainer');
+            box.innerHTML = '';
+            movies.forEach(m => {
+                box.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>${m.title} (${m.category})</span>
+                        <button onclick="deleteMovie(${m.id})" style="color:red;">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteMovie(id) {
+            movies = movies.filter(m => m.id !== id);
+            showManageMovies();
+        }
+
+        // --- الشكاوى والمساعدة ---
+        function sendReport() {
+            const txt = document.getElementById('reportText').value.trim();
+            if(!txt) return;
+            reports.push(txt);
+            document.getElementById('reportText').value = '';
+            closeModal('helpModal');
+            updateBadges();
+            alert("تم الإرسال للإدارة.");
+        }
+
+        function updateBadges() {
+            document.getElementById('reportBadge').innerText = reports.length;
+            document.getElementById('reportsBadgeInBox').innerText = reports.length;
+        }
+
+        function showReportsList() {
+            showStep('admin-reports');
+            const box = document.getElementById('reportsContainer');
+            box.innerHTML = '';
+            reports.forEach((r, idx) => {
+                box.innerHTML += `
+                    <div style="background:#f1f5f9; padding:6px; margin-bottom:5px; border-radius:4px;">
+                        <p style="font-size:12px;">${r}</p>
+                        <button onclick="deleteReport(${idx})" style="color:red; font-size:11px;">مسح</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteReport(idx) {
+            reports.splice(idx, 1);
+            updateBadges();
+            showReportsList();
+        }
+
+        // --- البحث ---
+        function doSearch() {
+            const q = document.getElementById('searchInput').value.toLowerCase().trim();
+            const box = document.getElementById('searchResults');
+            box.innerHTML = '';
+            if(!q) return;
+
+            movies.filter(m => m.title.toLowerCase().includes(q)).forEach(m => {
+                box.innerHTML += `
+                    <div style="padding:8px; cursor:pointer; background:#1e293b; margin-bottom:4px; border-radius:4px;" onclick="playMovie('${m.title}', '${m.videoUrl}', '${m.category}'); closeModal('searchModal');">
+                        🎬 ${m.title}
+                    </div>
+                `;
+            });
+        }
+
+        // البدء القسري بصفحة القوائم بدون عرض أفلام عشوائية
+        showCategoryList();
+    </script>
+</body>
+</html>
